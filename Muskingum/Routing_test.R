@@ -117,10 +117,11 @@ results$coef - coef
 cor_Model <- cor(df$Outflow2,df$Outflow2_sim)
 R2_Model <- R2(df$Outflow2,df$Outflow2_sim)
 RMSE_Model <- rmse(df$Outflow2,df$Outflow2_sim)
+RMSE2 <- sqrt(sum((df$Outflow2 - df$Outflow2_sim)^2)/nrow(df))
 print(paste0("Pearson Correlation Coefficient           (r) = ",cor_Model))
 print(paste0("Squared Pearson Correlation Coefficient (r^2) = ",cor_Model^2))
 print(paste0("Coefficient of Determination            (R^2) = ",R2_Model))
-print(paste0("Root Mean Square Error (RMSE) = ",RMSE_Model))
+print(paste0("Root Mean Square Error (RMSE) = ",RMSE_Model, "; ",RMSE2))
 ##-----------------------------------------------------------------------------
 ## Time-Series Plot
 xlab1 <- 'Time (h)'

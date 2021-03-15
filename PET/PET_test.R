@@ -275,5 +275,45 @@ sp4 <- ggscatter(df1, x="ETo1",y="ETo2",
 print(sp4)
 fn4 <- paste0(path,"/ETo_Validate.pdf")
 ggsave(filename=fn4, plot=sp4,width=30,height=30,units="cm", dpi=600)
+
+
+##------------------------------------------------------------------------------
+## plot saturation vapor pressure vs. temperature
+temp1 <- seq(from=0, to=60, by=1)
+es1 <- SatVP(temp1)
+
+##-----------------------------------------
+## example to use 'for loop' 
+## Not recommend: too tedious
+temp1 <- vector(mode="numeric", length=61)
+es1 <- vector(mode="numeric", length=61)
+for(i in 1:61) {
+  temp1[i] <- i - 1 
+  es1[i] <- SatVP(temp1[i])
+}
+##-----------------------------------------
+
+df_es <- data.frame(temp1, es1)
+
+xlab1 <- bquote(bold("Temperature (°C)"))
+ylab1 <- bquote(bold("Saturation vapor pressure (kPa)"))
+
+xlim1 <-c (0, 60)
+## scatter plot
+sp1 <- ggscatter(df_es, x="temp1",y="es1", shape=1, size=3, color="blue") +
+  geom_line(size=1, color="red") + 
+  scale_x_continuous(breaks=seq(xlim1[1],xlim1[2],10)) +
+  # scale_y_continuous(breaks=seq(ylim1[1],ylim1[2],2)) +
+  xlab(xlab1) +
+  ylab(ylab1) +
+  theme(
+    axis.text=element_text(size=size_axis),
+    axis.title=element_text(size=size_title,face="bold")
+  )
+
+print(sp1)
+fn1 <- paste0(path,"/SatVP-Temp.pdf")
+ggsave(filename=fn1, plot=sp1,width=30,height=30,units="cm", dpi=600)
+##------------------------------------------------------------------------------
 ##==============================================================================
 
