@@ -239,4 +239,47 @@ summary(outside)
 
 mean(limits[2,] - limits[1,]) / mean(Qobs, na.rm=T)
 
+##------------------------------------------------------------------------------
+## Time-Series Plot
+
+size_axis <- 20
+size_title <- size_axis+2
+
+xlab1 <- 'Time'
+ylab1 <- 'Qobs'
+
+df <- data.frame(seq(1,length(Qobs)),Qobs,limits[1,],limits[2,])
+legend <- c("Qobs","Qsim_low","Qsim_high")
+colnames(df) <- c("Time","Qobs","Qsim_low","Qsim_high")
+
+color1 <- c("cornflowerblue","darkgreen","red")
+
+
+title1 <- bquote(bold("Topmodel Simulation"))
+
+sp3 <- ggplot(data=df, aes(x=Time)) + 
+  ggtitle(title1) +
+  xlab(xlab1) + ylab(ylab1) + 
+  geom_point(aes(y = Qobs, color=legend[1]), size=2, shape = 1) +
+  geom_line(aes(y = Qsim_low, color=legend[2]), size=1) + 
+  geom_line(aes(y = Qsim_high, color=legend[3]), size=1) +
+  
+  
+  scale_color_manual(name="Data",values = color1,limits=legend) +
+  guides(col = guide_legend(nrow=3)) +
+  theme(
+    plot.title=element_text(hjust=0.5, size=size_title,face="bold"),
+    plot.subtitle=element_text(hjust=-0.03, size=size_title, face="bold"),
+    strip.text.x=element_blank(),
+    axis.text=element_text(size=size_axis),
+    axis.title=element_text(size=size_title,face="bold"),
+    legend.text=element_text(size=size_axis),
+    legend.title=element_text(size=size_axis),
+    legend.position=c(0.2,0.8)
+  )
+
+print(sp3)
+fn3 <- paste0("Topmodel.pdf")
+ggsave(filename=fn3, plot=sp3,width=50,height=20,units="cm", dpi=600)
+
 ##--------------------------------------------------------------------------
