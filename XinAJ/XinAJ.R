@@ -125,7 +125,7 @@ XinAJrun <- function(PREC, EVAP, parameters, UH, Area, dt) {
       R <- 0.00
       W <- W + PE
     } else {
-      # /**  Use soil water capacity curve to cal change of soil watet change */
+      # /**  Use soil water capacity curve to cal change of soil water change */
       A <- WMM * (1 - '^'((1.0 - W / WM), 1. / (1. + B)))
       
       ## Depth of soil moisture + net prec < maximum soil water storage
@@ -315,5 +315,9 @@ R2 <- function(obs,sim){
   obs_mean <- mean(obs)
   R2 <-  1-sum((sim-obs)^2)/sum((obs-obs_mean)^2)
 }
-
+##-----------------------------------------------------------------------------
+SatFrac <- function(B, WMM, W){
+  SatFrac <- 1-(1-W/WMM)**B
+}
+  
 ##-----------------------------------------------------------------------------

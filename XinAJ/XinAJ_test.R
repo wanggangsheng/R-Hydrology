@@ -16,6 +16,7 @@
 ##------------------------------------------------------------------------------
 library(ggplot2)
 library(ggpubr)  ## ggscatter
+library(tidyr)  ## gather
 #Clean up Environment
 rm(list = ls())
 setwd("/Users/wgs/ownCloud/Rcode/R-Hydrology/XinAJ")
@@ -33,6 +34,29 @@ str(XAJpar)
 
 param <- XAJpar$param_value
 npar <- length(param)
+param
+##-----------------------------------------------------------------------------
+XAJpar
+## Sketch for the saturation-excess runoff generation mechanism
+WM <- sum(XAJpar$param_value[3:5])  ## watershed-average soil moisture storage (SMS) capacity 
+B <- XAJpar$param_value[7]          ## exponent of the SMS capacity curve
+print(paste0("WM= ",WM, "; B= ",B)) 
+WMM <- WM * (1. + B)  ## watershed max SMS capacity
+
+xpos <- 0.2
+W <- seq(0,WMM,by=1)
+fsat <- SatFrac(B,WMM,W)
+plot(x=fsat,y=W,type='l',xlab="Saturation Fraction",ylab="Max Soil Moisture Storage (mm)")
+abline(h=WMM,col="blue",lty=2,lwd=3)
+text(x=xpos,y=WMM*0.95,col="blue","Wmm: watershed Max SMS capacity")
+abline(h=WM,col="red",lty=2,lwd=2)
+text(x=xpos,y=WM*1.05,col="blue","Wm: : watershed Mean SMS capacity")
+abline(h=WM/2,col="black",lty=1,lwd=2)
+text(x=xpos,y=WM/2*1.1,col="blue","PE+a: Current watershed Max SMS")
+abline(h=WM/6,col="black",lty=1,lwd=2)
+text(x=xpos,y=WM/6*1.15,col="blue","a: Initial watershed Max SMS")
+axis(side=2, at=seq(0, WMM, by=20))
+
 ##-----------------------------------------------------------------------------
 ## Randomly Generate Parameter Values from their ranges 
 for (i in 1:npar) {
@@ -42,6 +66,7 @@ param[10] <- 0.70 - param[11]  ## KI = 0.70 - KG
 names(param) <- XAJpar$param_names
 ##-----------------------------------------------------------------------------
 param
+
 
 dt <- 24 ## days?
 area <- 1000 ## watershed area, km^2
@@ -69,6 +94,45 @@ pie(Qsim, main="Qsim")
 
 R2_XAJ <- R2(input_data$Qobs,XAJ_test$Qsim)
 R2_XAJ
+
+##------------------------------------------------------------------------------
+## scatter plot
+size_axis <- 20
+size_title <- size_axis+2
+size_regression <- size_axis/3
+
+df <- data.frame(seq(1,nt),input_data$Qobs,XAJ_test$Qsim)
+legend <- c("Qobs","Qsim")
+colnames(df) <- c("Time",legend)
+
+xmax1 <- ceiling(max(df$Qobs)/2)*2
+xmax2 <- ceiling(max(df$Qsim)/2)*2
+ymax <- max(xmax1,xmax2)
+ylim1 <- c(0, ymax)
+
+title1 <- bquote("Xin'AnJiang Model: "*R^2*" = "*.(round(R2_XAJ,digits=3)))
+xlab1 <- bquote(bold("Observed Streamflow ")*bold(" ("*m^3*" "*s^bold("-1")*")"))
+ylab1 <- bquote(bold("Simulated Streamflow ")*bold(" ("*m^3*" "*s^bold("-1")*")"))
+
+ggscatter(df, x="Qobs",y="Qsim",color="blue",shape=21,size=3, add="reg.line") +
+  geom_abline(intercept = 0, slope = 1) + 
+  stat_cor(aes(label = paste('r = ', ..r..)),
+           label.x = 3, label.y =ymax*1, size=size_regression) +
+  stat_regline_equation(label.x = 3, label.y =ymax*0.95, size=size_regression) +
+  coord_cartesian(xlim=ylim1, ylim=ylim1) +
+  scale_x_continuous(breaks=seq(ylim1[1],ylim1[2],10)) +
+  scale_y_continuous(breaks=seq(ylim1[1],ylim1[2],10)) +
+  ggtitle(title1) +
+  xlab(xlab1) +
+  ylab(ylab1) +
+  theme(
+    panel.border = element_rect(size=2, colour = "black",fill=NA),
+    plot.title = element_text(hjust =0.5,size=size_title),
+    axis.text=element_text(size=size_axis),
+    axis.title=element_text(size=size_title,face="bold")
+  )
+
+##------------------------------------------------------------------------------
 
 ##-----------------------------------------------------------------------------
 ## Monte Carlo simulations
@@ -99,6 +163,24 @@ plot(cumulative_probability,
      xlab=bquote(R^bold("2")),ylab="Cumulative probability")
 axis(side=1, at=seq(0, 1, by=0.2))
 ##---------------------------------------------------------
+
+## visualization of the sensitivity using dotty plots:
+par_names <- colnames(parameters)
+par_R2 <- data.frame(param_sample,R2_XAJ)
+
+par_R2_gather <- gather(par_R2,Parameter,Value,-R2_XAJ)
+
+summary(par_R2_gather)
+ylab1 <-bquote("Coefficient of Determination: "*R^bold("2"))
+
+ggplot(data = par_R2_gather, aes(x = Value, y = R2_XAJ)) + 
+  geom_point(aes(color = Parameter)) + 
+  ylab(ylab1) +
+  scale_y_continuous(breaks=seq(0,1, by=0.2), limits=c(0,1)) +
+  theme_bw() +
+  facet_wrap(~Parameter,scales = "free",  ncol=3) 
+
+##------------------------------------------------------------------------------
 
 max(R2_XAJ)
 iR2max <- which.max(R2_XAJ)
